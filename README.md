@@ -1,57 +1,39 @@
-
-# dabase is sick/sickness
-# thrive is the main account in django
-
-
-"""
-Directions taken from
-http://django-tastypie.readthedocs.org/en/latest/tutorial.html
-"""
-
-"""
-Latest working URLs:
-http://127.0.0.1:8000/api/v1/user/schema/?format=json
-http://127.0.0.1:8000/api/v1/user/set/1;3/?format=json
-http://127.0.0.1:8000/api/v1/entry/schema/?format=json
-http://127.0.0.1:8000/api/v1/entry/1/?format=json
-"""
-
-### Process
-
-## Project setup
+# Project Setup
 $ django-admin.py startproject sapi
 $ cd sapi/
 
-# verify project integrity
+#### verify project integrity
 $ python manage.py runserver
 
-# ----------------- should see something like -------------------- #
+##### should see something like:
+<pre>
 0 errors found
 Django version 1.3.1, using settings 'sapi.settings'
 Development server is running at http://127.0.0.1:8000/
 Quit the server with CONTROL-C.
-# ---------------------------------------------------------------- #
+</pre>
 
-# kill it with CONTROL-C
+kill it with CONTROL-C
 
 
-## Database
+# Database
 
-# Server side setup
-#  - create system user ( if need be )
+Server side setup
+* create system user ( if need be )
 
-# setup of database http://www.cyberciti.biz/faq/howto-add-postgresql-user-account/
-#  - create database owner
-#  - create database
-#  - grant owner privs
+Setup of database http://www.cyberciti.biz/faq/howto-add-postgresql-user-account/
+* create database owner
+* create database
+* grant owner privs
 
 
 $ python manage.py syncdb
 
-# create django project super user
+#### create django project super user
 
-# Enable admin
-# ----------------------- within sapi/settins.py ----------------------- #
+#### Enable admin
+#### within sapi/settins.py
+<pre>
 INSTALLED_APPS = (
     'django.contrib.auth',
     'django.contrib.contenttypes',
@@ -61,31 +43,32 @@ INSTALLED_APPS = (
     'django.contrib.staticfiles',
     'django.contrib.admin',
 )
-# ---------------------------------------------------------------------- #
+</pre>
 
-# Enable the URLS to admin
-# ----------------------- within sapi/urls.py -------------------------- #
+Enable the URLS to admin
+#### within sapi/urls.py
+<pre>
 from django.contrib import admin
 admin.autodiscover()
 
 urlpatterns = patterns('',
     url(r'^admin/', include(admin.site.urls)),
 )
-# ---------------------------------------------------------------------- #
+</pre>
 
-# open http://127.0.0.1:8000/admin/ in browser
+open http://127.0.0.1:8000/admin/ in browser
+should see "Django administration"
 
-# should see "Django administration"
 
-
-## API setup
+# API setup
 
 $ python manage.py startapp seq_api
 $ cd seq_api
 
-# paste tastypie in seq_api file
+#### paste tastypie file into in seq_api file
 
-# ----------------------- within sapi/seq_api/models.py -------------------------- #
+#### within sapi/seq_api/models.py
+<pre>
 from tastypie.utils import now
 from django.contrib.auth.models import User
 from django.db import models # this was the only default in this file
@@ -108,26 +91,28 @@ class Gene(models.Model):
       self.slug = slugify(self.title)[:50]
 
     return super(Entry, self).save(*args, **kwargs)
-# -------------------------------------------------------------------------------- #
+</pre>
 
 
-# install tastypie requirements
-# http://django-tastypie.readthedocs.org/en/latest/tutorial.html#installation
+install tastypie requirements
+http://django-tastypie.readthedocs.org/en/latest/tutorial.html#installation
 
 
 # Enable tastypie
-# ------------------------- within sapi/settins.py ------------------------- #
+#### within sapi/settins.py
+<pre>
 INSTALLED_APPS = (
     ...
     'django.contrib.staticfiles',
     'django.contrib.admin',
     'tastypie',
 )
-# -------------------------------------------------------------------------- #
+</pre>
 
 
-# Create the Gene resources
-# ----------------------- within sapi/seq_api/api.py ----------------------- #
+Create the Gene resources
+#### within sapi/seq_api/api.py
+<pre>
 from tastypie.resources import ModelResource
 from seq_api.models import Gene
 
@@ -135,11 +120,12 @@ class GeneResource(ModelResource):
   class Meta:
     queryset = Gene.objects.all()
     resource_name = 'gene'
-# -------------------------------------------------------------------------- #
+</pre>
 
 
-# Creating URLs for resource access
-# ----------------------- replace sapi/urls.py ------------------------- #
+#### Creating URLs for resource access
+#### replace contents sapi/urls.py
+<pre>
 from django.conf.urls.defaults import patterns, include, url
 from django.contrib import admin
 from django.conf.urls.defaults import *
@@ -152,21 +138,22 @@ urlpatterns = patterns('',
     url(r'^admin/', include(admin.site.urls)),
     (r'^api/', include(gene_resource.urls)),
 )
-# ---------------------------------------------------------------------- #
+</pre>
 
-# verify that the login / admin still work
+#### verify that the login / admin still work
 http://127.0.0.1:8000/admin/
 
-# Check out some of the resources!
+#### Check out some of the resources!
 http://127.0.0.1:8000/api/gene/?format=json
 http://127.0.0.1:8000/api/gene/schema/?format=json
 
-# Make an API call 
+#### Make an API call 
 $ curl -H "Accept: application/json" http://127.0.0.1:8000/api/gene/?format=json
 
 
-# Connect the users for authenticaion
-# ----------------------- within sapi/seq_api/api.py ----------------------- #
+Connect the users for authenticaion
+#### within sapi/seq_api/api.py
+<pre>
 from django.contrib.auth.models import User
 from tastypie import fields
 from tastypie.resources import ModelResource
@@ -182,11 +169,12 @@ class GeneResource(ModelResource):
   class Meta:
     queryset = Gene.objects.all()
     resource_name = 'gene'
-# ---------------------------------------------------------------------- #
+</pre>
 
 
-# Expand the API w versioning and links to necessary user resources
-# ----------------------- replace sapi/urls.py ------------------------- #
+Expand the API w versioning and links to necessary user resources
+#### replace sapi/urls.py
+<pre>
 from django.conf.urls.defaults import patterns, include, url
 from django.contrib import admin
 from django.conf.urls.defaults import *
@@ -202,25 +190,27 @@ urlpatterns = patterns('',
     url(r'^admin/', include(admin.site.urls)),
     (r'^api/', include(v1_api.urls)),
 )
-# ---------------------------------------------------------------------- #
+</pre>
 
 
-# Restrict fields and methods
-# ----------------------- add within sapi/seq_api/api.py ----------------------- #
+Restrict fields and methods
+#### add within sapi/seq_api/api.py
+<pre>
 class UserResource(ModelResource):
   class Meta:
     queryset = User.objects.all()
     resource_name = 'user'
     excludes = ['email', 'password', 'is_active', 'is_staff', 'is_superuser']
     allowed_methods = ['get']
-# ------------------------------------------------------------------------------ #
+</pre>
 
 
 
 
 
-# Now ading API key support and authorization http://django-tastypie.readthedocs.org/en/latest/authentication_authorization.html#apikeyauthentication
-# ----------------------- add to sapi/seq_api/api.py ----------------------- #
+Now ading API key support and authorization http://django-tastypie.readthedocs.org/en/latest/authentication_authorization.html#apikeyauthentication
+#### add to sapi/seq_api/api.py
+<pre>
 from django.contrib.auth.models import User
 from tastypie.authentication import ApiKeyAuthentication # Addition
 from tastypie.authorization import DjangoAuthorization # Addition
@@ -247,11 +237,11 @@ class GeneResource(ModelResource):
   class Meta:
     queryset = Gene.objects.all()
     resource_name = 'gene'
-# ------------------------------------------------------------------------------ #
+</pre>
 
-#login to the Admin interface and create a new user and get the API key
+login to the Admin interface and create a new user and get the API key
 
-# Try out some API calls
+#### Try out some API calls
 http://127.0.0.1:8000/api/v1/entries/?username=wiley&api_key=c6d67998ade8e177ed96d1369adf6e7cdcad2d13
 curl -H "Authorization: ApiKey wiley:204db7bcfafb2deb7506b89eb3b9b715b09905c8" http://127.0.0.1:8000/api/v1/?format=json
 
