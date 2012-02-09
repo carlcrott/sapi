@@ -4,6 +4,7 @@ from django.db import models # this was the only default in this file
 from django.template.defaultfilters import slugify
 
 class Gene(models.Model):
+  # I think these are safe to comment out
 #  user = models.ForeignKey(User)
 #  pub_date = models.DateTimeField(default=now)
   name = models.CharField(max_length=100)

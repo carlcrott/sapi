@@ -85,7 +85,85 @@ $ cd seq_api
 
 # paste tastypie in seq_api file
 
+# ----------------------- within sapi/seq_api/models.py -------------------------- #
+from tastypie.utils import now
+from django.contrib.auth.models import User
+from django.db import models # this was the only default in this file
+from django.template.defaultfilters import slugify
 
+class Gene(models.Model):
+  # I think these are safe to comment out
+#  user = models.ForeignKey(User)
+#  pub_date = models.DateTimeField(default=now)
+  name = models.CharField(max_length=100)
+  sequence = models.CharField(max_length=100000)
+  chromosome = models.CharField(max_length=10)
+  slug = models.SlugField()
+
+  def __unicode__(self):
+    return self.title
+
+  def save(self, *args, **kwargs):
+    # For automatic slug generation.
+    if not self.slug:
+      self.slug = slugify(self.title)[:50]
+
+    return super(Entry, self).save(*args, **kwargs)
+# -------------------------------------------------------------------------------- #
+
+
+# install tastypie requirements
+# http://django-tastypie.readthedocs.org/en/latest/tutorial.html#installation
+
+
+# Enable tastypie
+# ------------------------- within sapi/settins.py ------------------------- #
+INSTALLED_APPS = (
+    ...
+    'django.contrib.staticfiles',
+    'django.contrib.admin',
+    'tastypie',
+)
+# -------------------------------------------------------------------------- #
+
+
+# Create the Gene resources
+# ----------------------- within sapi/seq_api/api.py ----------------------- #
+from tastypie.resources import ModelResource
+from seq_api.models import Gene
+
+class GeneResource(ModelResource):
+  class Meta:
+    queryset = Gene.objects.all()
+    resource_name = 'gene'
+# -------------------------------------------------------------------------- #
+
+
+# Creating URLs for resource access
+# ----------------------- replace sapi/urls.py ------------------------- #
+from django.conf.urls.defaults import patterns, include, url
+from django.contrib import admin
+from django.conf.urls.defaults import *
+from seq_api.api import GeneResource
+admin.autodiscover()
+
+gene_resource = GeneResource()
+
+urlpatterns = patterns('',
+    url(r'^admin/', include(admin.site.urls)),
+    (r'^api/', include(gene_resource.urls)),
+)
+# ---------------------------------------------------------------------- #
+
+# verify that the login / admin still work
+http://127.0.0.1:8000/admin/
+
+# Check out some of the resources!
+http://127.0.0.1:8000/api/gene/?format=json
+http://127.0.0.1:8000/api/gene/schema/?format=json
+
+# Make an API call 
+$ curl -H "Accept: application/json" http://127.0.0.1:8000/api/gene/?format=json
 
 
 
