@@ -92,8 +92,7 @@ from django.db import models # this was the only default in this file
 from django.template.defaultfilters import slugify
 
 class Gene(models.Model):
-  # I think these are safe to comment out
-#  user = models.ForeignKey(User)
+  user = models.ForeignKey(User)
 #  pub_date = models.DateTimeField(default=now)
   name = models.CharField(max_length=100)
   sequence = models.CharField(max_length=100000)
@@ -205,6 +204,16 @@ urlpatterns = patterns('',
 )
 # ---------------------------------------------------------------------- #
 
+
+# Restrict fields and methods
+# ----------------------- add within sapi/seq_api/api.py ----------------------- #
+class UserResource(ModelResource):
+  class Meta:
+    queryset = User.objects.all()
+    resource_name = 'user'
+    excludes = ['email', 'password', 'is_active', 'is_staff', 'is_superuser']
+    allowed_methods = ['get']
+# ------------------------------------------------------------------------------ #
 
 
 
