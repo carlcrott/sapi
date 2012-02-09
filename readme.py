@@ -219,11 +219,35 @@ class UserResource(ModelResource):
 
 
 
+# Now ading API key support and authorization http://django-tastypie.readthedocs.org/en/latest/authentication_authorization.html#apikeyauthentication
+# ----------------------- add to sapi/seq_api/api.py ----------------------- #
+from django.contrib.auth.models import User
+from tastypie.authentication import ApiKeyAuthentication # Addition
+from tastypie.authorization import DjangoAuthorization # Addition
+from tastypie import fields
+from tastypie.resources import ModelResource
+from seq_api.models import Gene
+from django.db import models # Addition
+from tastypie.models import create_api_key # Addition
 
+models.signals.post_save.connect(create_api_key, sender=User) # Addition
 
+class UserResource(ModelResource):
+  class Meta:
+    queryset = User.objects.all()
+    resource_name = 'user'
+    excludes = ['email', 'password', 'is_active', 'is_staff', 'is_superuser']
+    allowed_methods = ['get']
+    # Add 
+    authentication = ApiKeyAuthentication()  # Addition
+    authorization = DjangoAuthorization()  # Addition
 
-
-
+class GeneResource(ModelResource):
+  user = fields.ForeignKey(UserResource, 'user')
+  class Meta:
+    queryset = Gene.objects.all()
+    resource_name = 'gene'
+# ------------------------------------------------------------------------------ #
 
 
 
