@@ -249,7 +249,11 @@ class GeneResource(ModelResource):
     resource_name = 'gene'
 # ------------------------------------------------------------------------------ #
 
+#login to the Admin interface and create a new user and get the API key
 
+# Try out some API calls
+http://127.0.0.1:8000/api/v1/entries/?username=wiley&api_key=c6d67998ade8e177ed96d1369adf6e7cdcad2d13
+curl -H "Authorization: ApiKey wiley:204db7bcfafb2deb7506b89eb3b9b715b09905c8" http://127.0.0.1:8000/api/v1/?format=json
 
 
 
